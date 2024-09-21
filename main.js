@@ -30,7 +30,7 @@ function write_data(newData, path = dataPath) {
 
 // Обработка запросов на главную страницу
 app.get('/', (req, res) => {
-  res.send('Привет, fsdhsdfh!');
+  res.send({string: 'hello', string2: 'world'});
 });
 
 // Обработка запросов на страницу "/about"
@@ -38,7 +38,13 @@ app.get('/about', (req, res) => {
   res.send('Это страница "О нас".');
 });
 
-
+//login
+app.post('/login', (req, res) => {
+  const { username, password } = req.body;
+  console.log(username, password);
+  
+  res.status(400).send({ error: 'Неверный логин или пароль'})
+});
 
 
 // Запуск сервера
