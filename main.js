@@ -5,6 +5,8 @@ const fs = require('fs');
 const path = require('path');
 const localhost = '172.31.1.203';
 const port = 3000;
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 
 
@@ -40,8 +42,9 @@ app.get('/about', (req, res) => {
 
 //login
 app.post('/login', (req, res) => {
-  const { username, password } = req.body;
-  console.log(username, password);
+  const info = req.body;
+  const username = info.username;
+  const password = info.password; 
   
   res.status(400).send({ error: 'Неверный логин или пароль'})
 });
