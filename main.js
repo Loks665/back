@@ -353,6 +353,98 @@ app.post('/confirm-trade', (req, res) => {
       });
     });
 
+    app.post('/start-course', (req, res) => {
+      const { teamId, courseId } = req.body;  // Получаем команду и новый курс
+      const teamsData = read_data(data_path["teams"]);  // Чтение данных команд
+      const usersData = read_data(data_path["users"]);  // Чтение данных пользователей
+      const coursesData = read_data(data_path["courses"]);  // Чтение данных курсов
+  
+      const team = teamsData[teamId];  // Ищем команду по teamId
+  
+      if (!team) {
+          return res.status(400).send({ error: 'Команда не найдена' });
+      }
+  
+      const currentCourseId = team.currentCourseId;  // Получаем ID текущего курса
+      const currentCourse = coursesData[currentCourseId];  // Получаем текущий курс
+  
+      if (!currentCourse) {
+          return res.status(400).send({ error: 'Текущий курс не найден' });
+      }
+  
+      // Проверка завершённости текущего курса для всех членов команды
+      const teamMembers = team.members;  // Список членов команды
+      for (const member of teamMembers) {
+          const user = usersData[member];
+          if (!user) {
+              return res.status(400).send({ error: `Пользователь ${member} не найден `});
+          }
+  
+          // Проверяем, завершил ли пользователь текущий курс
+          const hasCompletedCourse = user.completedCourses.some(completed => 
+              completed.courseId == currentCourseId
+          );
+  
+          if (!hasCompletedCourse) {
+              return res.status(403).send({ 
+                  error: `Пользователь ${user.name} не завершил текущий курс`
+              });
+          }
+      }
+  
+      // Проверка, существует ли новый курс
+      if (!coursesData[courseId]) {
+          return res.status(400).send({ error: 'Курс не найден' });
+      }
+  
+      // Если все завершили текущий курс, обновляем текущий курс на новый
+      team.currentCourseId = courseId;
+  
+      // Сохранение изменений в файл
+      write_data(data_path["teams"], teamsData);
+  
+      return res.status(200).send({ message: 'Новый курс успешно начат' });
+  });
+
+  app.get('/courses/:teamId', (req, res) => {
+    const { teamId } = req.params;  // Получаем ID команды из параметров маршрута
+    const teamsData = read_data(data_path["teams"]);  // Чтение данных команд
+    const coursesData = read_data(data_path["courses"]);  // Чтение данных курсов
+    
+    const team = teamsData[teamId];  // Ищем команду по teamId
+    
+    if (!team) {
+        return res.status(400).send({ error: 'Команда не найдена' });
+    }
+    
+    const currentCourseId = team.currentCourseId;  // Получаем ID текущего курса
+    const currentCourse = coursesData[currentCourseId];  // Ищем текущий курс по ID
+    
+    if (!currentCourse) {
+        return res.status(400).send({ error: 'Текущий курс не найден' });
+    }
+
+    // Собираем все курсы в удобный формат
+    const allCourses = Object.keys(coursesData).map(courseId => {
+        const course = coursesData[courseId];
+        return {
+            courseId: courseId,
+            courseName: course.name,
+            branches: course.branch
+        };
+    });
+
+    // Возвращаем информацию о всех курсах и текущем курсе
+    return res.status(200).send({
+        currentCourse: {
+            courseId: currentCourseId,
+            courseName: currentCourse.name,
+            branches: currentCourse.branch
+        },
+        allCourses: allCourses
+    });
+});
+
 // Запуск сервера
 app.listen(port, () => {
   console.log(`Сервер запущен на http://${localhost}:${port}`);
