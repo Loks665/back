@@ -104,27 +104,34 @@ app.post('/login', (req, res) => {
 app.post('/userpage', (req, res) => { 
   const info = req.body;
   const { login } = info;
-  const userData = read_data(data_path["users"])[login];
-  if (userData == undefined) return res.status(400).send({ error: 'Пользователь не найден'});
-  const teamId = userData["teamId"];
-  if (teamId == -1) return res.status(200).send({ error: 'Пользователь не в команде', name: userData["name"], login: userData["login"]});
+  const usersData = read_data(data_path["users"]);
+  const user = usersData[login]
+  if (user == undefined) return res.status(400).send({ error: 'Пользователь не найден'});
+  const teamId = user["teamId"];
+  if (teamId == -1) return res.status(200).send({ error: 'Пользователь не в команде', name: user["name"], login: user["login"]});
   const teamData = read_data(data_path["teams"])[teamId];
-  if (teamData == undefined) return res.status(400).send({ error: 'Команда не найдена', name: userData["name"], login: userData["login"], teamId: teamId});
+  if (teamData == undefined) return res.status(400).send({ error: 'Команда не найдена', name: user["name"], login: user["login"], teamId: teamId});
   let teammates = [];
   for (const id in teamData['members']) {
     const member = teamData["members"][id];
-    
+    const teamUser = usersData[member];
+    teammates.push({
+      name: teamUser["name"],
+      login: teamUser["login"],
+      points: teamUser["points"],
+      avatar: teamUser["avatar"],
+    })
   }
 
   return res.status(200).send({
-    name: userData["name"],
-    login: userData["login"],
-    avatar: userData["avatar"],
-    points: userData["points"],
-    //branchNow: userData["branchNow"],
-    achievements: userData["achievements"],
-    completedCourses: userData["completedCourses"],
-    elephantsId: userData["elephantsId"],
+    name: user["name"],
+    login: user["login"],
+    avatar: user["avatar"],
+    points: user["points"],
+    //branchNow: user["branchNow"],
+    achievements: user["achievements"], 
+    completedCourses: user["completedCourses"],
+    elephantsId: user["elephantsId"],
     
     teamName: teamData["name"],
     teammates: teammates
