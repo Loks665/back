@@ -1,0 +1,8 @@
+{
+    "0": {
+        "name": "Команда разработчиков",
+        "membersLogins": ["admin", "jun"],
+        "currentCourseId": 1,
+        "points": 24
+    }
+}

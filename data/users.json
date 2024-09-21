@@ -1,0 +1,37 @@
+{
+    "admin": {
+        "type": "student",
+        "name": "Anonimus",
+        "password": "password",
+        "teamId": 0,
+        "avatar": "admin_avatar.jpg",
+        "branchNow": "fried",
+        "points": 2,
+        "completedCourses": [
+            {
+                "courseId": 0,
+                "branch": "install_amigo"
+            }
+        ],
+        "achievementsId": [0],
+        "elephantsId": [ 0, 1, 2, 3, 4 ]
+    },
+    
+    "jun": {
+        "type": "student",
+        "name": "Джун",
+        "password": "крутой_пароль1234",
+        "teamId": 0,
+        "avatar": "jun_avatar.jfif",
+        "branchNow": "steamed",
+        "points": 1,
+        "completedCourses": [
+            {
+                "courseId": 0,
+                "branch": "install_vinda"
+            }
+        ],
+        "achievementsId": [0],
+        "elephantsId": [ 3, 4 ]
+    }
+}
