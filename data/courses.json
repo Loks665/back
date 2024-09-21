@@ -1,12 +1,19 @@
 {
     "0": {
-        "name": "kak_byt_adminom",
-        "stages": ["install_vinda", "install_amigo"],
+        "name": "Как быть админом",
+        "branch": {
+            "install_vinda": ["Как включить компьютер", "Как установить винду"],
+            "install_amigo": ["Браузеры для чайников", "Скачиваем Амиго"]
+        },
         "achievementId": 0
     },
     "1": {
         "name": "pelmeny",
-        "stages": ["lepka", "varka"],
+        "branch": {
+            "fried": ["Выбираем сковородку", "Идеальные пельмени для жарки"],
+            "boiled": ["Добавлять лаврушку или нет?", "Как не переварить"],
+            "steamed": ["Это что такое вообще?", "Невозможное возможно"]
+        },
         "achievementId": 1
     }
 }

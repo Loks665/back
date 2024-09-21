@@ -1,6 +1,8 @@
 {
     "0": {
         "name": "Команда разработчиков",
-        "teammatesIDs": [0]
+        "teammatesLogins": ["admin", "jun"],
+        "currentCourseId": 1,
+        "points": 24
     }
 }
