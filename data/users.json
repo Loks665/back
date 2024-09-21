@@ -1,3 +1,29 @@
 {
-    "123": {}
-}
+    "admin": {
+      "type": "teacher",
+      "name": "Anonimus",
+      "password": "password",
+      "avatar": "admin_avatar.jpg",
+      "courses": {
+        "startedCourses": 
+        {
+            "id": 101,
+            "stage": "varka"
+        }
+        ,
+        "completedCourses": 
+        {
+            "id": 100
+        }
+        
+      },
+      "achievements": 
+        {
+          "id": [1, 2]
+        }
+      ,
+      "inventory": {
+        "elephantsId": [ 0, 1, 2, 3, 4 ]
+      }
+    }
+  }

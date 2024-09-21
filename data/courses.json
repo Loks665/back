@@ -1,0 +1,12 @@
+{
+    "0": {
+        "name": "kak_byt_adminom",
+        "stages": ["install_vinda", "install_amigo"],
+        "achievementId": 0
+    },
+    "1": {
+        "name": "pelmeny",
+        "stages": ["lepka", "varka"],
+        "achievementId": 1
+    }
+}
