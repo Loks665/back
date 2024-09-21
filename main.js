@@ -8,8 +8,6 @@ const port = 3000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-
-
 function read_data(path = dataPath) {
   try {
       const data = fs.readFileSync(path, 'utf-8'); 
@@ -38,6 +36,15 @@ app.get('/', (req, res) => {
 // Обработка запросов на страницу "/about"
 app.get('/about', (req, res) => {
   res.send('Это страница "О нас".');
+});
+
+app.get('/top-teams', (req, res) => {
+      const teams = read_data(data_path["teams"]);
+      const teamsArray = Object.values(teams);
+      teamsArray.sort((a, b) => b.points - a.points);
+      const topTeams = teamsArray.slice(0, 3);
+
+      res.send(topTeams);
 });
 
 //login
