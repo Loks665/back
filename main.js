@@ -241,65 +241,6 @@ app.post('/confirm-trade', (req, res) => {
   });
 });
 
-
-
-  app.get('/userpage/:login', (req, res) => { 
-    const { login } = req.params; // Получаем логин из параметров маршрута
-    const usersData = read_data(data_path["users"]); // Чтение данных пользователей
-    const user = usersData[login]; // Ищем пользователя по логину
-
-    if (!user) {
-      return res.status(400).send({ error: 'Пользователь не найден' });
-    }
-
-    const teamId = user["teamId"]; // Получаем команду пользователя
-    if (teamId == -1) {
-    return res.status(200).send({ 
-      message: 'Пользователь не в команде', 
-      name: user["name"], 
-      login: user["login"] 
-      });
-    }
-    
-    const teamData = read_data(data_path["teams"])[teamId]; // Читаем данные команды
-    if (!teamData) {
-    return res.status(400).send({ 
-      error: 'Команда не найдена', 
-      name: user["name"], 
-      login: user["login"], 
-      teamId: teamId 
-      });
-    }
-    
-    // Собираем информацию о всех участниках команды
-    let teammates = [];
-    for (const id in teamData['members']) {
-      const member = teamData["members"][id];
-      const teamUser = usersData[member];
-      teammates.push({
-        name: teamUser["name"],
-        login: teamUser["login"],
-        points: teamUser["points"],
-        avatar: teamUser["avatar"],
-      });
-    }
-    
-    const elephantsData = read_data(data_path["elephants"]); // Загружаем данные о слонах
-    let userElephants = user.elephantsId.map(id => elephantsData[id]);
-
-    // Возвращаем данные пользователя и его команды
-    return res.status(200).send({
-      name: user["name"],
-      login: user["login"],
-      avatar: user["avatar"],
-      points: user["points"],
-      teamId: teamId,
-      teamName: teamData["name"],
-      teammates: teammates,
-      elephants: userElephants
-      });
-    });
-
   app.get('/userpage/:login', (req, res) => { 
       const { login } = req.params; // Получаем логин из параметров маршрута
       const usersData = read_data(data_path["users"]); // Чтение данных пользователей
