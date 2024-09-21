@@ -3,7 +3,7 @@ const app = express();
 //app.use(cors());
 const fs = require('fs'); 
 const path = require('path');
-const localhost = '172.31.1.203';
+const localhost = '172.31.1.103';
 const port = 3000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -114,44 +114,244 @@ app.post('/userpage', (req, res) => {
   const info = req.body;
   const { login } = info;
   const usersData = read_data(data_path["users"]);
-  const user = usersData[login]
-  if (user == undefined) return res.status(400).send({ error: 'Пользователь не найден'});
+  const elephantsData = read_data(data_path["elephants"]); // Загружаем данные о слонах
+  const user = usersData[login];
+  
+  if (user == undefined) return res.status(400).send({ error: 'Пользователь не найден' });
+
   const teamId = user["teamId"];
-  if (teamId == -1) return res.status(200).send({ error: 'Пользователь не в команде', name: user["name"], login: user["login"]});
-  const teamData = read_data(data_path["teams"])[teamId];
-  if (teamData == undefined) return res.status(400).send({ error: 'Команда не найдена', name: user["name"], login: user["login"], teamId: teamId});
-  let teammates = [];
-  for (const id in teamData['members']) {
-    const member = teamData["members"][id];
-    const teamUser = usersData[member];
-    teammates.push({
-      name: teamUser["name"],
-      login: teamUser["login"],
-      points: teamUser["points"],
-      avatar: teamUser["avatar"],
-    })
+  if (teamId == -1) {
+      return res.status(200).send({ 
+          error: 'Пользователь не в команде', 
+          name: user["name"], 
+          login: user["login"] 
+      });
   }
 
+  const teamData = read_data(data_path["teams"])[teamId];
+  if (teamData == undefined) {
+      return res.status(400).send({ 
+          error: 'Команда не найдена', 
+          name: user["name"], 
+          login: user["login"], 
+          teamId: teamId 
+      });
+  }
+
+  let teammates = [];
+  for (const id in teamData['members']) {
+      const member = teamData["members"][id];
+      const teamUser = usersData[member];
+      teammates.push({
+          name: teamUser["name"],
+          login: teamUser["login"],
+          points: teamUser["points"],
+          avatar: teamUser["avatar"],
+      });
+  }
+
+  // Получаем список слонов пользователя
+  let userElephants = user.elephantsId.map(id => elephantsData[id]);
+
+  res.status(200).send({
+      name: user["name"],
+      login: user["login"],
+      team: teamData["name"],
+      teammates: teammates,
+      achievements: user["achievementsId"],
+      elephants: userElephants // Слоны пользователя
+  });
+});
+
+  app.post('/initiate-trade', (req, res) => {
+    const { senderLogin, receiverLogin, elephantId } = req.body;
+    const usersData = read_data(data_path["users"]);
+
+    const sender = usersData[senderLogin];
+    const receiver = usersData[receiverLogin];
+
+    if (!sender || !receiver) {
+        return res.status(400).send({ error: 'Отправитель или получатель не найден' });
+    }
+
+    // Проверяем, что у отправителя есть этот слон
+    if (!sender.elephantsId.includes(elephantId)) {
+        return res.status(400).send({ error: 'У отправителя нет этого слона' });
+    }
+
+    // Отправляем запрос на обмен
+    // Предполагаем, что у пользователя есть поле для хранения запросов на обмен
+    if (!receiver.tradeRequests) {
+        receiver.tradeRequests = [];
+    }
+
+    receiver.tradeRequests.push({
+        sender: senderLogin,
+        elephantId: elephantId
+    });
+
+    // Сохраняем изменения
+    write_data(data_path["users"], usersData);
+
+    return res.status(200).send({ message: 'Запрос на обмен отправлен' });
+});
+
+app.post('/confirm-trade', (req, res) => {
+  const { receiverLogin, senderLogin, elephantId } = req.body;
+  const usersData = read_data(data_path["users"]);
+
+  const sender = usersData[senderLogin];
+  const receiver = usersData[receiverLogin];
+
+  if (!sender || !receiver) {
+      return res.status(400).send({ error: 'Отправитель или получатель не найден' });
+  }
+
+  // Проверяем, что запрос на обмен существует
+  const tradeRequestIndex = receiver.tradeRequests.findIndex(
+      request => request.sender === senderLogin && request.elephantId === elephantId
+  );
+
+  if (tradeRequestIndex === -1) {
+      return res.status(400).send({ error: 'Запрос на обмен не найден' });
+  }
+
+  // Убираем слона у отправителя
+  sender.elephantsId = sender.elephantsId.filter(id => id !== elephantId);
+
+  // Добавляем слона получателю
+  receiver.elephantsId.push(elephantId);
+
+  // Убираем запрос на обмен
+  receiver.tradeRequests.splice(tradeRequestIndex, 1);
+
+  // Сохраняем изменения
+  write_data(data_path["users"], usersData);
+
   return res.status(200).send({
-    name: user["name"],
-    login: user["login"],
-    avatar: user["avatar"],
-    points: user["points"],
-    //branchNow: user["branchNow"],
-    achievements: user["achievements"], 
-    completedCourses: user["completedCourses"],
-    elephantsId: user["elephantsId"],
-    
-    teamName: teamData["name"],
-    teammates: teammates
-  })
-
-
+      message: 'Слон успешно передан',
+      sender: {
+          name: sender.name,
+          elephants: sender.elephantsId.map(id => elephantsData[id])
+      },
+      receiver: {
+          name: receiver.name,
+          elephants: receiver.elephantsId.map(id => elephantsData[id])
+      }
+  });
 });
 
 
 
+  app.get('/userpage/:login', (req, res) => { 
+    const { login } = req.params; // Получаем логин из параметров маршрута
+    const usersData = read_data(data_path["users"]); // Чтение данных пользователей
+    const user = usersData[login]; // Ищем пользователя по логину
 
+    if (!user) {
+      return res.status(400).send({ error: 'Пользователь не найден' });
+    }
+
+    const teamId = user["teamId"]; // Получаем команду пользователя
+    if (teamId == -1) {
+    return res.status(200).send({ 
+      message: 'Пользователь не в команде', 
+      name: user["name"], 
+      login: user["login"] 
+      });
+    }
+    
+    const teamData = read_data(data_path["teams"])[teamId]; // Читаем данные команды
+    if (!teamData) {
+    return res.status(400).send({ 
+      error: 'Команда не найдена', 
+      name: user["name"], 
+      login: user["login"], 
+      teamId: teamId 
+      });
+    }
+    
+    // Собираем информацию о всех участниках команды
+    let teammates = [];
+    for (const id in teamData['members']) {
+      const member = teamData["members"][id];
+      const teamUser = usersData[member];
+      teammates.push({
+        name: teamUser["name"],
+        login: teamUser["login"],
+        points: teamUser["points"],
+        avatar: teamUser["avatar"],
+      });
+    }
+    
+    const elephantsData = read_data(data_path["elephants"]); // Загружаем данные о слонах
+    let userElephants = user.elephantsId.map(id => elephantsData[id]);
+
+    // Возвращаем данные пользователя и его команды
+    return res.status(200).send({
+      name: user["name"],
+      login: user["login"],
+      avatar: user["avatar"],
+      points: user["points"],
+      teamId: teamId,
+      teamName: teamData["name"],
+      teammates: teammates,
+      elephants: userElephants
+      });
+    });
+
+  app.get('/userpage/:login', (req, res) => { 
+      const { login } = req.params; // Получаем логин из параметров маршрута
+      const usersData = read_data(data_path["users"]); // Чтение данных пользователей
+      const user = usersData[login]; // Ищем пользователя по логину
+      
+      if (!user) {
+        return res.status(400).send({ error: 'Пользователь не найден' });
+      }
+      
+      const teamId = user["teamId"]; // Получаем команду пользователя
+      if (teamId == -1) {
+        return res.status(200).send({ 
+          message: 'Пользователь не в команде', 
+          name: user["name"], 
+          login: user["login"] 
+        });
+      }
+    
+      const teamData = read_data(data_path["teams"])[teamId]; // Читаем данные команды
+      if (!teamData) {
+        return res.status(400).send({ 
+          error: 'Команда не найдена', 
+          name: user["name"], 
+          login: user["login"], 
+          teamId: teamId 
+        });
+      }
+    
+      // Собираем информацию о всех участниках команды
+      let teammates = [];
+      for (const id in teamData['members']) {
+        const member = teamData["members"][id];
+        const teamUser = usersData[member];
+        teammates.push({
+          name: teamUser["name"],
+          login: teamUser["login"],
+          points: teamUser["points"],
+          avatar: teamUser["avatar"],
+        });
+      }
+    
+      // Возвращаем данные пользователя и его команды
+      return res.status(200).send({
+        name: user["name"],
+        login: user["login"],
+        teamId: teamId,
+        teamName: teamData["name"],
+        teammates: teammates,
+        achievements: user["achievementsId"],
+        elephants: userElephants // Слоны пользователя
+      });
+    });
 
 // Запуск сервера
 app.listen(port, () => {
