@@ -1,7 +1,7 @@
 {
     "0": {
         "name": "Команда разработчиков",
-        "members": ["admin", "jun"],
+        "members": ["admin", "1"],
         "currentCourseId": 1,
         "points": 24
     }

@@ -17,10 +17,10 @@
         "elephantsId": [ 0, 1, 2, 3, 4 ]
     },
     
-    "jun": {
+    "1": {
         "type": "student",
         "name": "Джун",
-        "password": "крутой_пароль1234",
+        "password": "1",
         "teamId": 0,
         "avatar": "jun_avatar.jfif",
         "branchNow": "steamed",
